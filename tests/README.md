@@ -8,7 +8,7 @@ This directory contains comprehensive tests for all Conda-Purger scripts.
 
 | Platform | Test File | Description |
 |----------|-----------|-------------|
-| **macOS** | `test_macos.sh` | Tests the macOS conda purge script |
+| **macOS** | `test_mac_os.sh` | Tests the macOS conda purge script |
 | **Linux** | `test_linux.sh` | Tests the Linux conda purge script |
 | **Windows** | `test_windows.ps1` | Tests the Windows PowerShell script |
 
@@ -19,12 +19,8 @@ Each platform test covers:
 1. **Script Existence & Permissions** - Verifies scripts exist and are executable
 2. **Help Output** - Tests help/usage information
 3. **Dry Run Mode** - Confirms default safe mode
-4. **Argument Parsing** - Tests all command-line flags
-5. **Invalid Arguments** - Verifies error handling
-6. **JSON Output** - Tests JSON formatting
-7. **Quiet Mode** - Tests reduced output mode
-8. **Force Mode** - Tests force flag handling
-9. **Platform-Specific Features** - Tests unique functionality per platform
+4. **Apply Mode (Sandboxed)** - Executes destructive actions only inside a temp sandbox with fake tools
+5. **Idempotency** - Re-running apply does nothing harmful
 
 ## 🚀 Running Tests
 
@@ -45,7 +41,10 @@ Each platform test covers:
 ./tests/test_linux.sh
 
 # Windows tests (requires PowerShell)
-pwsh -File .\tests\test_windows.ps1
+# On Windows:
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\test_windows.ps1
+# Or with PowerShell Core on any OS:
+pwsh -NoProfile -File ./tests/test_windows.ps1
 ```
 
 ### Test Output
@@ -61,10 +60,11 @@ Tests provide colored output with:
 ### macOS/Linux
 - Bash shell
 - No special requirements
+- Tests run in a sandboxed temp HOME and use fake `sudo`/`brew` to avoid system changes
 
 ### Windows
-- PowerShell 5+ (Windows 10+ includes it by default)
-- Or PowerShell Core (`pwsh`)
+- PowerShell 5+ (Windows 10+ includes it by default) or PowerShell Core (`pwsh`)
+- Test will skip automatically if PowerShell is unavailable, or if your User PATH contains conda-like entries
 
 ## 📊 Test Results
 
@@ -96,13 +96,13 @@ If tests fail because scripts are missing, ensure:
 
 ## 🎯 What Tests Don't Cover
 
-These tests are **non-destructive** and don't:
-- Actually modify system files
-- Remove real conda installations
-- Change environment variables
-- Modify registry entries
+These tests are **non-destructive**:
+- All file removals happen inside a temporary sandbox HOME
+- System-level operations are routed through a fake `sudo` and never touch real `/etc` or `/usr`
+- On macOS, Homebrew is faked so cask uninstalls are simulated only
+- Windows test avoids touching your real profile/registry and will skip if it detects risk conditions
 
-They only test the **detection and reporting** functionality in dry-run mode.
+Tests exercise both dry-run and apply behavior, but only within the sandbox.
 
 ## 📝 Adding New Tests
 
