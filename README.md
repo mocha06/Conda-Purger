@@ -191,6 +191,10 @@ If you're using WSL, the Linux script will clean your Linux environment. To clea
 
 ---
 
+## 📝 Contributing
+
+Contributions are welcome! Please feel free to submit a PR if you find any issues. To test your changes and ensure they work as expected, you can run the tests in the `tests` directory. See the [tests README](tests/README.md) for more details.
+
 ## 📝 License
 
 MIT (do whatever, just don't hold me liable)
