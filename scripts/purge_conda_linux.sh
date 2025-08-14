@@ -126,6 +126,17 @@ parse_arguments() {
 # FILE OPS
 # =============================================================================
 
+detect_sed_flavor() {
+    # Detect GNU vs BSD sed to pick correct in-place flag
+    if sed --version >/dev/null 2>&1; then
+        # GNU sed
+        SED_INPLACE=(-i'')
+    else
+        # BSD sed (macOS)
+        SED_INPLACE=(-i '');
+    fi
+}
+
 backup_edit_file() {
     local file="$1"
 
@@ -139,8 +150,9 @@ backup_edit_file() {
 
         if [[ $DRY_RUN -eq 0 ]]; then
             cp "$file" "$file.bak"
-            # GNU sed (Linux)
-            sed -i'' \
+            # sed in-place (GNU/BSD)
+            detect_sed_flavor
+            sed "${SED_INPLACE[@]}" \
                 -e '/# >>> conda initialize >>>/,/# <<< conda initialize <<</d' \
                 -e '/conda init/d' \
                 -e '/\/etc\/profile\.d\/conda\.sh/d' \
@@ -229,7 +241,11 @@ clean_directories() {
 
 output_json() {
     if [[ $JSON -eq 1 ]]; then
-        printf '[\n  %s\n]\n' "$(IFS=$',\n'; echo "${JSON_ITEMS[*]}")"
+        if [[ ${#JSON_ITEMS[@]} -eq 0 ]]; then
+            printf '[]\n'
+        else
+            printf '[\n  %s\n]\n' "$(IFS=$',\n'; echo "${JSON_ITEMS[*]}")"
+        fi
     fi
 }
 

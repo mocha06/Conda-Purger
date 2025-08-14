@@ -266,7 +266,9 @@ clean_homebrew_casks() {
             removed_any=1
         fi
     done
-    [[ $removed_any -eq 0 ]] && log_success "No anaconda/miniconda casks installed"
+    if [[ $removed_any -eq 0 ]]; then
+        log_success "No anaconda/miniconda casks installed"
+    fi
 }
 
 # =============================================================================
@@ -275,7 +277,11 @@ clean_homebrew_casks() {
 
 output_json() {
     if [[ $JSON -eq 1 ]]; then
-        printf '[\n  %s\n]\n' "$(IFS=$',\n'; echo "${JSON_ITEMS[*]}")"
+        if [[ ${#JSON_ITEMS[@]} -eq 0 ]]; then
+            printf '[]\n'
+        else
+            printf '[\n  %s\n]\n' "$(IFS=$',\n'; echo "${JSON_ITEMS[*]}")"
+        fi
     fi
 }
 
